@@ -147,3 +147,26 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+# Python virtual environments
+.venv/
+venv/
+tf_env/
+
+# Local development history
+.history/
+
+# User-uploaded files and images
+uploads/
+
+# Python temporary files
+__pycache__/
+*.pyc
+
+# Local secrets
+*.pem
+*.key
+
+# Local machine files
+.DS_Store
+Thumbs.db
