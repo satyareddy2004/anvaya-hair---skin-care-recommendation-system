@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anvaya - Recommendations</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            position: relative;
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('assets/images/background.jpg') no-repeat center center;
+            background-size: cover;
+            z-index: -1;
+            filter: blur(5px);
+        }
+        .products-box {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            width: 90%;
+            max-width: 1200px;
+        }
+        h1 {
+            color: #6b4e31;
+            margin: 0 0 20px;
+            font-size: 28px;
+            text-transform: uppercase;
+        }
+        h2 {
+            color: #d4a373;
+            margin: 20px 0 10px;
+            font-size: 22px;
+            text-transform: uppercase;
+        }
+        .search-bar {
+            margin-bottom: 20px;
+            padding: 10px;
+            width: 100%;
+            max-width: 300px;
+            border-radius: 5px;
+            border: 1px solid #d4a373;
+            font-size: 16px;
+            outline: none;
+        }
+        .search-bar::placeholder {
+            color: #b08968;
+        }
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        .product-grid.loaded {
+            opacity: 1;
+        }
+        .product {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 5px;
+            border-radius: 5px;
+            text-align: center;
+            border: 1px solid #d4a373;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .product .image-container {
+            width: 100%;
+            height: 120px;
+            background-color: #f0f0f0;
+            margin-bottom: 10px;
+        }
+        .product img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: none;
+        }
+        .product img.loaded {
+            display: block;
+        }
+        .product p {
+            color: #6b4e31;
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        .product .name {
+            font-weight: bold;
+        }
+        .product .price {
+            color: #d4a373;
+        }
+        button {
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: none;
+            background-color: #d4a373;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #b08968;
+        }
+        .go-to-cart {
+            margin-top: 20px;
+            width: 100%;
+            max-width: 200px;
+        }
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #d4a373;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="products-box">
+        <h1 id="products-title">Recommended Products</h1>
+        <input type="text" class="search-bar" id="searchBar" placeholder="Search products...">
+        <div class="loading-spinner" id="loadingSpinner"></div>
+        <!-- Sections for different product types -->
+        <div id="productSections"></div>
+        <button class="go-to-cart" onclick="window.location.href='cart.html'">Go to Cart</button>
+    </div>
+   <script>
+    let allProducts = [];
+
+    async function loadProducts() {
+        const category = localStorage.getItem('category') || 'hair';
+        const recommendationsData = JSON.parse(localStorage.getItem('recommendations')) || {};
+        const answers = JSON.parse(localStorage.getItem('answers')) || {};
+        let problem = recommendationsData.problem || 'Unknown';
+
+        console.log('Recommendations Data:', recommendationsData);
+
+        if (!recommendationsData.recommendations || !recommendationsData.recommendations.commercial) {
+            document.getElementById('productSections').innerHTML = '<p>Error: No recommendations available. Please complete the analysis.</p>';
+            document.getElementById('loadingSpinner').style.display = 'none';
+            return;
+        }
+
+        if (category === 'skin' && answers.skinConcern) {
+            problem = answers.skinConcern;
+        } else if (category === 'hair' && answers.hairConcern) {
+            problem = answers.hairConcern;
+        }
+        if (problem === 'Dry') {
+    problem = 'Dryness';
+}
+
+        document.getElementById('products-title').textContent = `Recommended ${category.charAt(0).toUpperCase() + category.slice(1)} Products for ${problem} Problem`;
+        allProducts = recommendationsData.recommendations.commercial || [];
+        renderProducts(allProducts);
+    }
+
+    function renderProducts(products) {
+        const productSections = document.getElementById('productSections');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        productSections.innerHTML = '';
+
+        if (products.length === 0) {
+            productSections.innerHTML = '<p>No products found.</p>';
+            loadingSpinner.style.display = 'none';
+            return;
+        }
+
+        const category = localStorage.getItem('category') || 'hair';
+        const productTypes = category === 'hair' 
+            ? ['Shampoo', 'Conditioner', 'Oil'] 
+            : ['Cleanser', 'Moisturizer', 'Sunscreen'];
+
+        let loadedImages = 0;
+        let totalImages = 0;
+
+        // Calculate total images across all sections
+        productTypes.forEach(type => {
+            const typeProducts = products.filter(product => product.type === type);
+            totalImages += typeProducts.length;
+        });
+
+        if (totalImages === 0) {
+            productSections.innerHTML = '<p>No products found for the specified types.</p>';
+            loadingSpinner.style.display = 'none';
+            return;
+        }
+
+        productTypes.forEach(type => {
+            const typeProducts = products.filter(product => product.type === type);
+            if (typeProducts.length === 0) return;
+
+            const sectionDiv = document.createElement('div');
+            sectionDiv.className = 'product-section';
+            sectionDiv.innerHTML = `<h2>${type}s</h2>`;
+            const productGrid = document.createElement('div');
+            productGrid.className = 'product-grid';
+            sectionDiv.appendChild(productGrid);
+
+            const fragment = document.createDocumentFragment();
+            typeProducts.forEach(product => {
+                const productDiv = document.createElement('div');
+                productDiv.className = 'product';
+                productDiv.innerHTML = `
+                    <div class="image-container">
+                        <img src="assets/images/${product.image || 'placeholder.jpg'}" alt="${product.name}" onerror="this.src='assets/images/placeholder.jpg'">
+                    </div>
+                    <p class="name">Name: ${product.name}</p>
+                    <p class="price">Price: ₹${product.price}</p>
+                    <button onclick='addToCart("${product.name}", ${product.price}, "${product.image || 'placeholder.jpg'}")'>Add to Cart</button>
+                `;
+                const img = productDiv.querySelector('img');
+                img.onload = () => {
+                    img.classList.add('loaded');
+                    loadedImages++;
+                    if (loadedImages === totalImages) {
+                        loadingSpinner.style.display = 'none';
+                    }
+                    // Ensure the grid is visible as soon as its images are loaded
+                    productGrid.classList.add('loaded');
+                };
+                img.onerror = () => {
+                    img.src = 'assets/images/placeholder.jpg';
+                    loadedImages++;
+                    if (loadedImages === totalImages) {
+                        loadingSpinner.style.display = 'none';
+                    }
+                    productGrid.classList.add('loaded');
+                };
+                fragment.appendChild(productDiv);
+            });
+
+            productGrid.appendChild(fragment);
+            productSections.appendChild(sectionDiv);
+        });
+    }
+
+    function filterProducts() {
+        const query = document.getElementById('searchBar').value.toLowerCase();
+        const filteredProducts = allProducts.filter(product => 
+            product.name.toLowerCase().includes(query)
+        );
+        renderProducts(filteredProducts);
+    }
+
+    async function addToCart(name, price, image) {
+        try {
+            const userId = localStorage.getItem('userId') || 'defaultUser';
+            const response = await fetch('/cart/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, name, price, image })
+            });
+            const result = await response.json();
+            if (result.success) {
+                alert(result.message);
+            } else {
+                throw new Error(result.error || 'Failed to add to cart');
+            }
+        } catch (error) {
+            console.error('Error adding to cart:', error);
+            alert('Error adding to cart: ' + error.message);
+        }
+    }
+
+    loadProducts();
+    document.getElementById('searchBar').addEventListener('input', filterProducts);
+</script>
+</body>
+</html>

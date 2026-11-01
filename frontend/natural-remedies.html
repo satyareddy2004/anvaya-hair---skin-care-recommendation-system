@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anvaya - Natural Remedies</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            position: relative;
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('assets/images/background.jpg') no-repeat center center;
+            background-size: cover;
+            z-index: -1;
+            filter: blur(5px);
+        }
+        .remedies-box {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            width: 90%;
+            max-width: 1200px;
+        }
+        h1 {
+            color: #6b4e31;
+            margin: 0 0 20px;
+            font-size: 28px;
+            text-transform: uppercase;
+        }
+        h2 {
+            color: #d4a373;
+            margin: 20px 0 10px;
+            font-size: 22px;
+            text-transform: uppercase;
+            cursor: pointer;
+            background: rgba(212, 163, 115, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .remedy-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .remedy-grid.visible {
+            max-height: fit-content; /* Adjust based on content */
+        }
+        .remedy {
+            background: rgba(255, 255, 255, 0.8);
+        padding: 15px;
+        border-radius: 5px;
+        text-align: left;
+        border: 1px solid #d4a373;
+        /* Remove min-height to adjust to content */
+        display: flex;
+        flex-direction: column;
+        }
+        .remedy h3 {
+            color: #6b4e31;
+            margin: 0 0 10px;
+            font-size: 18px;
+        }
+        .remedy p {
+            color: #6b4e31;
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        .remedy p strong {
+            color: #8b5a2b;
+        }
+    </style>
+</head>
+<body>
+    <div class="remedies-box">
+        <h1 id="remedies-title">Natural Remedies</h1>
+        <div id="remedySections"></div>
+    </div>
+    <script>
+        const category = localStorage.getItem('category') || 'hair';
+        const recommendationsData = JSON.parse(localStorage.getItem('recommendations')) || {};
+        const answers = JSON.parse(localStorage.getItem('answers')) || {};
+        let problem = recommendationsData.problem || 'Unknown';
+
+        if (category === 'skin' && answers.skinConcern) {
+            problem = answers.skinConcern;
+        } else if (category === 'hair' && answers.hairConcern) {
+            problem = answers.hairConcern;
+        }
+
+        document.getElementById('remedies-title').textContent = `Natural ${category.charAt(0).toUpperCase() + category.slice(1)} Remedies for ${problem} Problem`;
+        const remedies = recommendationsData.recommendations?.natural || [];
+        const remedySections = document.getElementById('remedySections');
+
+        const productTypes = category === 'hair' 
+            ? ['Shampoo', 'Conditioner', 'Oil', 'Mask'] 
+            : ['Cleanser', 'Toner', 'Moisturizer', 'Mask'];
+
+        productTypes.forEach(type => {
+            const typeRemedies = remedies.filter(remedy => remedy.type === type);
+            if (typeRemedies.length === 0) return;
+
+            const sectionDiv = document.createElement('div');
+            sectionDiv.className = 'remedy-section';
+            sectionDiv.innerHTML = `<h2 onclick="toggleSection(this)">${type}s</h2>`;
+            const remedyGrid = document.createElement('div');
+            remedyGrid.className = 'remedy-grid';
+            sectionDiv.appendChild(remedyGrid);
+
+            const fragment = document.createDocumentFragment();
+            typeRemedies.forEach(remedy => {
+                const remedyDiv = document.createElement('div');
+                remedyDiv.className = 'remedy';
+                remedyDiv.innerHTML = `
+                    <h3>${remedy.name}</h3>
+                    <p><strong>Ingredients:</strong> ${remedy.ingredients}</p>
+                    <p><strong>Procedure:</strong> ${remedy.procedure}</p>
+                    <p><strong>Usage:</strong> ${remedy.usage}</p>
+                `;
+                fragment.appendChild(remedyDiv);
+            });
+
+            remedyGrid.appendChild(fragment);
+            remedySections.appendChild(sectionDiv);
+        });
+
+        function toggleSection(element) {
+            const grid = element.nextElementSibling;
+            grid.classList.toggle('visible');
+        }
+    </script>
+</body>
+</html>

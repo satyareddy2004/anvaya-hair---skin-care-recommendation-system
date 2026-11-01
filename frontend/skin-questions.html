@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anvaya - Skin Questions</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            position: relative;
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('assets/images/background.jpg') no-repeat center center;
+            background-size: cover;
+            z-index: -1;
+        }
+        .questions-box {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            width: 90%;
+            max-width: 500px;
+        }
+        h1 {
+            color: #6b4e31;
+            margin: 0 0 20px;
+            font-size: 28px;
+        }
+        select {
+            padding: 10px;
+            margin: 10px 0;
+            width: 100%;
+            max-width: 300px;
+            border-radius: 5px;
+            border: 1px solid #d4a373;
+        }
+        button {
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: none;
+            background-color: #d4a373;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #b08968;
+        }
+    </style>
+</head>
+<body>
+    <div class="questions-box">
+        <h1>Skin Questions</h1>
+        <select id="skinType">
+            <option value="Oily">Oily</option>
+            <option value="Dry">Dry</option>
+            <option value="Normal">Normal</option>
+            <option value="Combination">Combination</option>
+            <option value="Sensitive">Sensitive</option>
+        </select>
+        <select id="skinConcern">
+            <option value="Acne">Acne</option>
+            <option value="Dryness">Dryness</option>
+            <option value="Normal">Normal</option>
+            <option value="Aging">Aging</option>
+            <option value="Pigmentation">Pigmentation</option>
+            <option value="Redness">Redness</option>
+        </select>
+        <button onclick="submitSkinAnswers()">Next</button>
+    </div>
+    <script>
+        function submitSkinAnswers() {
+            const answers = {
+                skinType: document.getElementById('skinType').value,
+                skinConcern: document.getElementById('skinConcern').value
+            };
+            localStorage.setItem('answers', JSON.stringify(answers));
+            localStorage.setItem('category', 'skin'); // Ensure category is set
+            window.location.href = 'upload.html';
+        }
+    </script>
+</body>
+</html>
